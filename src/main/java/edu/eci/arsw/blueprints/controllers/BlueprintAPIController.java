@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import javax.print.attribute.standard.PageRanges;
@@ -27,19 +28,18 @@ import javax.print.attribute.standard.PageRanges;
  *
  * @author hcadavid
  */
+@Service
 @RestController
 @RequestMapping(value = "/v1/blueprints")
 public class BlueprintAPIController {
 
     @Autowired
-    BlueprintsServices blueprintsServices;
+    BlueprintsServices bp= null;
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<?> getBluePrints() {
-        try {
-            Set<Blueprint> blueprints = blueprintsServices.getAllBlueprints();
-            Gson gson = new Gson();
-            return new ResponseEntity<>(gson.toJson(blueprints), HttpStatus.ACCEPTED);
+        try {;
+            return new ResponseEntity<>(bp.getAllBlueprints(),HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
             return new ResponseEntity<>("Error in the method getAllBluePrints", HttpStatus.NOT_FOUND);
@@ -47,11 +47,9 @@ public class BlueprintAPIController {
     }
 
     @GetMapping("/{author}")
-    public ResponseEntity<?> getAuthor(@PathVariable String author) {
+    public ResponseEntity<?> getAuthor(@PathVariable ("author") String author) {
         try {
-            Set<Blueprint> blueprints = blueprintsServices.getBlueprintsByAuthor(author);
-            Gson gson = new Gson();
-            return new ResponseEntity<>(gson.toJson(blueprints), HttpStatus.ACCEPTED);
+            return new ResponseEntity<>(bp.getBlueprintsByAuthor(author),HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
             return new ResponseEntity<>("No author found", HttpStatus.NOT_FOUND);
@@ -59,40 +57,15 @@ public class BlueprintAPIController {
     }
 
     @GetMapping("/{author}/{bpname}")
-    public ResponseEntity<?> getBlueprintAuthor(@PathVariable String author, @PathVariable String bpname) {
+    public ResponseEntity<?> getBlueprintAuthor(@PathVariable ("author") String author, @PathVariable String bpname) {
         try {
-            Blueprint blueprint = blueprintsServices.getBlueprint(author, bpname);
-            Gson gson = new Gson();
-            return new ResponseEntity<>(gson.toJson(blueprint), HttpStatus.ACCEPTED);
+            return new ResponseEntity<>(bp.getBlueprint(author, bpname),HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
             return new ResponseEntity<>("No author or Blueprint found", HttpStatus.NOT_FOUND);
         }
     }
 
-    @RequestMapping(path = "/create",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<?> addBlueprint(@RequestBody Blueprint blueprint) {
-        try {
-            blueprintsServices.addNewBlueprint(blueprint);
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } catch (BlueprintPersistenceException ex) {
-            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
-            return new ResponseEntity<>("Not possible to add",HttpStatus.FORBIDDEN);
-        }
-    }
-
-    @RequestMapping(path = "/update/{author}/{bpname}",method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<?> updateBlueprint(@PathVariable("author") String author, @PathVariable("bpname") String bpname, @RequestBody Blueprint blueprint) {
-        try {
-            blueprintsServices.updateBlueprint(author, bpname, blueprint);
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
-        } catch (BlueprintPersistenceException ex) {
-            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
-            return new ResponseEntity<>( "Not possible to update", HttpStatus.NOT_FOUND);
-        }
-    }
 
 }
 
