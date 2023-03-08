@@ -30,7 +30,7 @@ import javax.print.attribute.standard.PageRanges;
  */
 @Service
 @RestController
-@RequestMapping(value = "/v1/blueprints")
+@RequestMapping(value = "/blueprints")
 public class BlueprintAPIController {
 
     @Autowired
@@ -38,33 +38,64 @@ public class BlueprintAPIController {
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<?> getBluePrints() {
-        try {;
-            return new ResponseEntity<>(bp.getAllBlueprints(),HttpStatus.ACCEPTED);
+        try {
+            Set<Blueprint> blueprints = bp.getAllBlueprints();
+            Gson gson = new Gson();
+            return new ResponseEntity<>(gson.toJson(blueprints), HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
-            return new ResponseEntity<>("Error in the method getAllBluePrints", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Error en el metodo getAllBluePrints", HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/{author}")
-    public ResponseEntity<?> getAuthor(@PathVariable ("author") String author) {
+    public ResponseEntity<?> getAuthor(@PathVariable String author) {
         try {
-            return new ResponseEntity<>(bp.getBlueprintsByAuthor(author),HttpStatus.ACCEPTED);
+            Set<Blueprint> blueprints = bp.getBlueprintsByAuthor(author);
+            Gson gson = new Gson();
+            return new ResponseEntity<>(gson.toJson(blueprints), HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
-            return new ResponseEntity<>("No author found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Error 404, No se encontro el Author", HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/{author}/{bpname}")
-    public ResponseEntity<?> getBlueprintAuthor(@PathVariable ("author") String author, @PathVariable String bpname) {
+    public ResponseEntity<?> getBlueprintAuthor(@PathVariable String author, @PathVariable String bpname) {
         try {
-            return new ResponseEntity<>(bp.getBlueprint(author, bpname),HttpStatus.ACCEPTED);
+            Blueprint blueprint = bp.getBlueprint(author, bpname);
+            Gson gson = new Gson();
+            return new ResponseEntity<>(gson.toJson(blueprint), HttpStatus.ACCEPTED);
         } catch (BlueprintNotFoundException ex) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
-            return new ResponseEntity<>("No author or Blueprint found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Error 404, No se encontro el Author o el Blueprint", HttpStatus.NOT_FOUND);
         }
     }
+
+    @RequestMapping(path = "/create",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> addBlueprint(@RequestBody Blueprint blueprint) {
+        try {
+            bp.addNewBlueprint(blueprint);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } catch (BlueprintPersistenceException ex) {
+            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
+            return new ResponseEntity<>("No se pudo Añadir el Blueprint",HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @RequestMapping(path = "/update/{author}/{bpname}",method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> updateBlueprint(@PathVariable String author, @PathVariable String bpname, @RequestBody Blueprint blueprint) {
+        try {
+            bp.updateBlueprint(author, bpname, blueprint);
+            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        } catch (BlueprintPersistenceException ex) {
+            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, ex);
+            return new ResponseEntity<>( "No se pudo actualizar el Blueprint", HttpStatus.NOT_FOUND);
+        }
+    }
+
 
 
 }

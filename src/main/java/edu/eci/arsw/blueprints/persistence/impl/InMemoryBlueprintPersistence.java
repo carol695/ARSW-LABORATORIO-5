@@ -80,7 +80,7 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
         Blueprint bprintprov;
         for(Map.Entry<Tuple<String,String>,Blueprint>  entry :  blueprints.entrySet()){
             bprintprov=entry.getValue();
-            if(bprintprov.getAuthor()==author){
+            if(bprintprov.getAuthor().equals(author)){
                 ans.add(bprintprov);
             }
         }
